@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ar">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كوستم شات</title>
+    <meta property="og:title" content="كوستم شات">
+    <meta property="og:site_name" content="كوستم شات">
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700&family=Cairo:wght@400;700&family=Changa:wght@400;700&family=El+Messiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;700&family=Inter:wght@400;700&family=Lato:wght@400;700&family=Mada:wght@400;700&family=Montserrat:wght@400;700&family=Nunito:wght@400;700&family=Open+Sans:wght@400;700&family=Oswald:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Raleway:wght@400;700&family=Readex+Pro:wght@400;700&family=Roboto:wght@400;700&family=Tajawal:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tmi.js@1.8.5/index.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body oncontextmenu="return false;" @keydown.prevent="disableInspect">
+    <div id="app">
+        <!-- Chat Container -->
+        <div id="chat-container" :style="containerStyle"
+            :class="{ 'ticker-mode': settings.styleMode === 'ticker', 'single-box-mode': settings.singleBoxMode }">
+            <transition-group :name="settings.animation">
+                <div v-for="msg in messages" :key="msg.id" class="chat-message"
+                    :class="{ 'first-message': msg.isFirst, 'emote-only': msg.isEmoteOnly && settings.enableBigEmotes, 'is-owner': msg.isOwner }"
+                    :style="getMsgStyle(msg)">
+
+                    <!-- First Message Label -->
+                    <div v-if="msg.isFirst" class="first-label">First Message</div>
+
+                    <!-- Reply Context -->
+                    <div v-if="msg.reply" class="reply-context">
+                        <span class="reply-icon">↪</span>
+                        <span class="reply-user">@{{ msg.reply.username }}</span>
+                        <span class="reply-text">: {{ msg.reply.msg }}</span>
+                    </div>
+
+                    <!-- Event Message Layout -->
+                    <div v-if="msg.isEvent" class="event-body">
+                        <div class="event-icon">{{ msg.eventIcon }}</div>
+                        <div class="event-content">
+                            <span class="username event-user">{{ msg.username }}</span>
+                            <span class="event-text" v-html="msg.content"></span>
+                            <div v-if="msg.systemMsg" class="event-sub-message">{{ msg.systemMsg }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Redemption Message (New) -->
+                    <div v-else-if="msg.isRedemption" class="redemption-body">
+                        <div class="redemption-icon">💎</div>
+                        <div class="redemption-content">
+                            <span class="username">{{ msg.username }}</span>
+                            <span class="redemption-text">redeemed a reward</span>
+                            <div class="redemption-input" v-if="msg.content" v-html="msg.content"></div>
+                        </div>
+                    </div>
+
+                    <!-- Standard Message Content -->
+                    <div v-else class="message-body">
+                        <!-- Avatar -->
+                        <img v-if="settings.showAvatar && (msg.avatar || msg.isOwner)"
+                            :src="msg.isOwner ? 'owner-avatar.gif' : msg.avatar" class="avatar"
+                            :class="{ 'owner-gif': msg.isOwner }"
+                            :style="{ width: settings.avatarSize + 'px', height: settings.avatarSize + 'px' }">
+
+                        <!-- Badges -->
+                        <span v-if="settings.showBadges" class="badges">
+                            <img v-for="(url, key) in msg.badges" :key="key" :src="url" :alt="key" class="badge-icon">
+                        </span>
+
+                        <!-- Timestamp -->
+                        <span v-if="settings.showTime" class="timestamp">{{ msg.time }}</span>
+
+                        <!-- Username -->
+                        <span class="username" :style="{ color: msg.color || settings.textColor }">{{ msg.username
+                            }}</span>:
+
+                        <!-- Message Content -->
+                        <span class="message-text" dir="auto" v-html="msg.content"></span>
+                    </div>
+                </div>
+            </transition-group>
+        </div>
+
+        <!-- Control Panel -->
+        <div id="control-panel" class="draggable" :class="{ collapsed: !panelVisible }" v-if="!isOverlayMode">
+            <div class="panel-header" @mousedown="dragStart">
+                <h3>إعدادات الشات</h3>
+                <button @click="panelVisible = !panelVisible">{{ panelVisible ? '_' : 'B' }}</button>
+            </div>
+
+            <div class="panel-content" v-show="panelVisible">
+                <!-- Connection -->
+                <div class="control-group">
+                    <label>اسم القناة</label>
+                    <div class="input-row">
+                        <input type="text" v-model="channel" placeholder="shroud">
+                        <button @click="connect" :disabled="isConnecting">{{ isConnecting ? '...' : (isConnected ?
+                            'متصل' : 'اتصال') }}</button>
+                    </div>
+                </div>
+
+
+
+                <!-- OBS Link -->
+                <div class="control-group">
+                    <label>رابط OBS</label>
+                    <div class="input-row">
+                        <input :type="showLink ? 'text' : 'password'" :value="currentUrl" readonly
+                            style="letter-spacing: 1px;">
+                        <button @click="showLink = !showLink" class="secondary-btn" style="width: 40px; padding: 0;">{{
+                            showLink ? '🙈' : '👁️' }}</button>
+                        <button @click="copyLink" class="secondary-btn">نسخ</button>
+                    </div>
+                </div>
+
+                <!-- Appearance -->
+                <div class="control-group">
+                    <label>الخط الانجليزي (English Font)</label>
+                    <select v-model="settings.fontEn">
+                        <option value="Roboto">Roboto (Standard)</option>
+                        <option value="Inter">Inter (Clean)</option>
+                        <option value="Montserrat">Montserrat (Geometric)</option>
+                        <option value="Poppins">Poppins (Rounded)</option>
+                        <option value="Open Sans">Open Sans (Friendly)</option>
+                        <option value="Lato">Lato (Sleek)</option>
+                        <option value="Oswald">Oswald (Condensed)</option>
+                        <option value="Raleway">Raleway (Elegant)</option>
+                        <option value="Nunito">Nunito (Soft)</option>
+                        <option value="Playfair Display">Playfair (Serif)</option>
+                        <option value="Arial">Arial (System)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>الخط العربي (Arabic Font)</label>
+                    <select v-model="settings.fontAr">
+                        <option value="Cairo">Cairo (Standard)</option>
+                        <option value="Tajawal">Tajawal (Modern)</option>
+                        <option value="Almarai">Almarai (Clean)</option>
+                        <option value="Changa">Changa (Bold)</option>
+                        <option value="El Messiri">El Messiri (Stylish)</option>
+                        <option value="Mada">Mada (Simple)</option>
+                        <option value="Readex Pro">Readex Pro (Balanced)</option>
+                        <option value="IBM Plex Sans Arabic">IBM Plex (Tech)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>حجم الخط: {{ settings.fontSize }}px</label>
+                    <input type="range" v-model.number="settings.fontSize" min="12" max="60">
+                </div>
+
+                <!-- Colors -->
+                <div class="control-group">
+                    <label>الألوان</label>
+                    <div class="color-picker-row">
+                        <div>
+                            <span>خلفية</span>
+                            <input type="color" v-model="settings.bgColor">
+                        </div>
+                        <div>
+                            <span>النص</span>
+                            <input type="color" v-model="settings.textColor">
+                        </div>
+                    </div>
+                    <label>الشفافية: {{ settings.bgOpacity }}%</label>
+                    <input type="range" v-model.number="settings.bgOpacity" min="0" max="100">
+                </div>
+
+                <!-- Toggles -->
+                <div class="control-group">
+                    <label>العناصر</label>
+                    <div class="checkbox-row">
+                        <label><input type="checkbox" v-model="settings.showBadges"> بادجات</label>
+                        <label><input type="checkbox" v-model="settings.showEmotes"> ايموتات</label>
+                        <label><input type="checkbox" v-model="settings.showAvatar"> افتار</label>
+                        <label><input type="checkbox" v-model="settings.showTime"> وقت</label>
+                        <label><input type="checkbox" v-model="settings.showColorBorder"> حد ملون</label>
+                    </div>
+
+                    <div class="control-group">
+                        <label><input type="checkbox" v-model="settings.enableBigEmotes"> تضخيم الايموتات</label>
+                        <div v-if="settings.enableBigEmotes" style="margin-top: 5px;">
+                            <label style="font-size: 0.8em; color: #ccc;">الحجم: {{ settings.bigEmoteSize }}x</label>
+                            <input type="range" v-model.number="settings.bigEmoteSize" min="1" max="8" step="0.5">
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>حجم الافتار: {{ settings.avatarSize }}px</label>
+                        <input type="range" v-model.number="settings.avatarSize" min="20" max="100">
+                    </div>
+
+                    <!-- Animation & Alignment -->
+                    <div class="control-group">
+                        <label>محاذاة النص</label>
+                        <div class="checkbox-row">
+                            <label><input type="radio" value="left" v-model="settings.textAlign"> يسار</label>
+                            <label><input type="radio" value="right" v-model="settings.textAlign"> يمين</label>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>الحركة</label>
+                        <select v-model="settings.animation">
+                            <option value="fade-in">Fade In</option>
+                            <option value="slide-up">Slide Up</option>
+                            <option value="slide-left">Slide Left</option>
+                            <option value="slide-right">Slide Right</option>
+                            <option value="">None</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>نمط الشات</label>
+                        <select v-model="settings.styleMode">
+                            <option value="vertical">قائمة (عمودي)</option>
+                            <option value="ticker">شريط (أفقي)</option>
+                        </select>
+                        <div style="margin-top: 10px; border-top: 1px dashed #333; padding-top: 10px;">
+                            <label><input type="checkbox" v-model="settings.singleBoxMode"> صندوق واحد (مربع)</label>
+
+                            <div v-if="settings.singleBoxMode" style="margin-top: 5px; padding-right: 15px;">
+                                <div style="margin-bottom: 5px;">
+                                    <label style="font-size: 0.8em; color: #ccc;">العرض: {{ settings.boxWidth
+                                        }}px</label>
+                                    <input type="range" v-model.number="settings.boxWidth" min="200" max="800"
+                                        step="10">
+                                </div>
+                                <div style="margin-bottom: 5px;">
+                                    <label style="font-size: 0.8em; color: #ccc;">الارتفاع: {{ settings.boxHeight
+                                        }}px</label>
+                                    <input type="range" v-model.number="settings.boxHeight" min="200" max="800"
+                                        step="10">
+                                </div>
+                                <div style="margin-bottom: 5px; margin-top: 8px; border-top: 1px dashed #444; padding-top: 8px;">
+                                    <label style="font-size: 0.8em; color: #ccc;">لون خلفية الرسائل</label>
+                                    <input type="color" v-model="settings.msgBgColor">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.8em; color: #ccc;">شفافية الرسائل: {{ settings.msgBgOpacity }}%</label>
+                                    <input type="range" v-model.number="settings.msgBgOpacity" min="0" max="100">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>حد الرسائل</label>
+                        <input type="number" v-model.number="settings.maxMessages" min="1" max="200">
+                    </div>
+
+                    <div class="control-group">
+                        <label>مدة الظهور (ثواني)</label>
+                        <input type="number" v-model.number="settings.duration" min="0" max="300">
+                    </div>
+
+                    <div class="control-group">
+                        <button @click="saveSettings" class="secondary-btn">{{ saveBtnText }}</button>
+                        <button @click="clearChat" class="danger-btn">مسح</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="script.protected.js"></script>
+</body>
+
+</html>
