@@ -6,12 +6,17 @@
 
 body {
     font-family: 'Cairo', sans-serif;
-    background-color: transparent;
+    background-color: rgba(0, 0, 0, 0.01);
+    /* Hack: Force Antialiasing in OBS */
     /* Allows OBS to capture properly */
     overflow: hidden;
     /* Hide scrollbars for the overlay page */
     height: 100vh;
     width: 100vw;
+    /* Font Smoothing for better quality in OBS */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 /* Chat Container */
@@ -39,17 +44,18 @@ body {
 }
 
 .single-box-mode .chat-message {
-    background-color: transparent !important;
-    margin-bottom: 0;
-    border-radius: 0;
-    padding: 5px 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    /* bg color handled by JS */
+    margin-bottom: 6px;
+    border-radius: 4px;
+    padding: 8px 12px;
+    border-bottom: none;
     width: 100%;
     max-width: 100%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .single-box-mode .chat-message:last-child {
-    border-bottom: none;
+    margin-bottom: 0;
 }
 
 /* Message Styles */
@@ -71,8 +77,9 @@ body {
     /* Animation Hooks */
     opacity: 1;
     animation-fill-mode: forwards;
-    will-change: transform, opacity;
-    /* Hardware acceleration */
+    /* Removed will-change to improve text sharpness in OBS */
+    backface-visibility: hidden;
+    /* Force GPU smoothing without 3D blur */
 }
 
 /* Owner Styling */
@@ -555,12 +562,6 @@ button.danger-btn {
     /* Override Anims */
     animation: none !important;
     transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-
-    /* Performance Enhancements for OBS */
-    will-change: transform, opacity;
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    perspective: 1000px;
 }
 
 /* Animations Overrides */
