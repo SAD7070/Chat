@@ -102,6 +102,8 @@
                     </div>
                 </div>
 
+
+
                 <!-- OBS Link -->
                 <div class="control-group">
                     <label>رابط OBS</label>
@@ -178,98 +180,97 @@
                         <label><input type="checkbox" v-model="settings.showTime"> وقت</label>
                         <label><input type="checkbox" v-model="settings.showColorBorder"> حد ملون</label>
                     </div>
-                </div>
 
-                <div class="control-group">
-                    <label><input type="checkbox" v-model="settings.enableBigEmotes"> تضخيم الايموتات</label>
-                    <div v-if="settings.enableBigEmotes" style="margin-top: 5px;">
-                        <label style="font-size: 0.8em; color: #ccc;">الحجم: {{ settings.bigEmoteSize }}x</label>
-                        <input type="range" v-model.number="settings.bigEmoteSize" min="1" max="8" step="0.5">
+                    <div class="control-group">
+                        <label><input type="checkbox" v-model="settings.enableBigEmotes"> تضخيم الايموتات</label>
+                        <div v-if="settings.enableBigEmotes" style="margin-top: 5px;">
+                            <label style="font-size: 0.8em; color: #ccc;">الحجم: {{ settings.bigEmoteSize }}x</label>
+                            <input type="range" v-model.number="settings.bigEmoteSize" min="1" max="8" step="0.5">
+                        </div>
                     </div>
-                </div>
 
-                <div class="control-group">
-                    <label>حجم الافتار: {{ settings.avatarSize }}px</label>
-                    <input type="range" v-model.number="settings.avatarSize" min="20" max="100">
-                </div>
-
-                <!-- Animation & Alignment -->
-                <div class="control-group">
-                    <label>محاذاة النص</label>
-                    <div class="checkbox-row">
-                        <label><input type="radio" value="left" v-model="settings.textAlign"> يسار</label>
-                        <label><input type="radio" value="right" v-model="settings.textAlign"> يمين</label>
+                    <div class="control-group">
+                        <label>حجم الافتار: {{ settings.avatarSize }}px</label>
+                        <input type="range" v-model.number="settings.avatarSize" min="20" max="100">
                     </div>
-                </div>
 
-                <div class="control-group">
-                    <label>الحركة</label>
-                    <select v-model="settings.animation">
-                        <option value="fade-in">Fade In</option>
-                        <option value="slide-up">Slide Up</option>
-                        <option value="slide-left">Slide Left</option>
-                        <option value="slide-right">Slide Right</option>
-                        <option value="">None</option>
-                    </select>
-                </div>
+                    <!-- Animation & Alignment -->
+                    <div class="control-group">
+                        <label>محاذاة النص</label>
+                        <div class="checkbox-row">
+                            <label><input type="radio" value="left" v-model="settings.textAlign"> يسار</label>
+                            <label><input type="radio" value="right" v-model="settings.textAlign"> يمين</label>
+                        </div>
+                    </div>
 
-                <div class="control-group">
-                    <label>نمط الشات</label>
-                    <select v-model="settings.styleMode">
-                        <option value="vertical">قائمة (عمودي)</option>
-                        <option value="ticker">شريط (أفقي)</option>
-                    </select>
-                    <div style="margin-top: 10px; border-top: 1px dashed #333; padding-top: 10px;">
-                        <label><input type="checkbox" v-model="settings.singleBoxMode"> صندوق واحد (مربع)</label>
+                    <div class="control-group">
+                        <label>الحركة</label>
+                        <select v-model="settings.animation">
+                            <option value="fade-in">Fade In</option>
+                            <option value="slide-up">Slide Up</option>
+                            <option value="slide-left">Slide Left</option>
+                            <option value="slide-right">Slide Right</option>
+                            <option value="">None</option>
+                        </select>
+                    </div>
 
-                        <div v-if="settings.singleBoxMode" style="margin-top: 5px; padding-right: 15px;">
-                            <div style="margin-bottom: 5px;">
-                                <label style="font-size: 0.8em; color: #ccc;">العرض: {{ settings.boxWidth
-                                    }}px</label>
-                                <input type="range" v-model.number="settings.boxWidth" min="200" max="800"
-                                    step="10">
-                            </div>
-                            <div>
-                                <label style="font-size: 0.8em; color: #ccc;">الارتفاع: {{ settings.boxHeight
-                                    }}px</label>
-                                <input type="range" v-model.number="settings.boxHeight" min="200" max="800"
-                                    step="10">
-                            </div>
-                            <div style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
-                                <label style="color: #ccc; margin-bottom: 5px;">لون خلفية الرسائل</label>
-                                <div class="color-picker-row">
-                                    <div style="width: 100%;">
-                                        <input type="color" v-model="settings.msgBgColor" style="height: 30px;">
-                                    </div>
+                    <div class="control-group">
+                        <label>نمط الشات</label>
+                        <select v-model="settings.styleMode">
+                            <option value="vertical">قائمة (عمودي)</option>
+                            <option value="ticker">شريط (أفقي)</option>
+                        </select>
+                        <div style="margin-top: 10px; border-top: 1px dashed #333; padding-top: 10px;">
+                            <label><input type="checkbox" v-model="settings.singleBoxMode"> صندوق واحد (مربع)</label>
+
+                            <div v-if="settings.singleBoxMode" style="margin-top: 5px; padding-right: 15px;">
+                                <div style="margin-bottom: 5px;">
+                                    <label style="font-size: 0.8em; color: #ccc;">العرض: {{ settings.boxWidth
+                                        }}px</label>
+                                    <input type="range" v-model.number="settings.boxWidth" min="200" max="800"
+                                        step="10">
                                 </div>
-                                <label style="font-size: 0.8em; color: #ccc;">شفافية الرسائل: {{
-                                    settings.msgBgOpacity }}%</label>
-                                <input type="range" v-model.number="settings.msgBgOpacity" min="0" max="100">
+                                <div>
+                                    <label style="font-size: 0.8em; color: #ccc;">الارتفاع: {{ settings.boxHeight
+                                        }}px</label>
+                                    <input type="range" v-model.number="settings.boxHeight" min="200" max="800"
+                                        step="10">
+                                </div>
+                                <div style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
+                                    <label style="color: #ccc; margin-bottom: 5px;">لون خلفية الرسائل</label>
+                                    <div class="color-picker-row">
+                                        <div style="width: 100%;">
+                                            <input type="color" v-model="settings.msgBgColor" style="height: 30px;">
+                                        </div>
+                                    </div>
+                                    <label style="font-size: 0.8em; color: #ccc;">شفافية الرسائل: {{
+                                        settings.msgBgOpacity }}%</label>
+                                    <input type="range" v-model.number="settings.msgBgOpacity" min="0" max="100">
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="control-group">
-                    <label>حد الرسائل</label>
-                    <input type="number" v-model.number="settings.maxMessages" min="1" max="200">
-                </div>
+                    <div class="control-group">
+                        <label>حد الرسائل</label>
+                        <input type="number" v-model.number="settings.maxMessages" min="1" max="200">
+                    </div>
 
-                <div class="control-group">
-                    <label>مدة الظهور (ثواني)</label>
-                    <input type="number" v-model.number="settings.duration" min="0" max="300">
-                </div>
+                    <div class="control-group">
+                        <label>مدة الظهور (ثواني)</label>
+                        <input type="number" v-model.number="settings.duration" min="0" max="300">
+                    </div>
 
-                <div class="control-group">
-                    <button @click="saveSettings" class="secondary-btn">{{ saveBtnText }}</button>
-                    <button @click="clearChat" class="danger-btn">مسح</button>
-                    <div id="status" class="status"></div>
+                    <div class="control-group">
+                        <button @click="saveSettings" class="secondary-btn">{{ saveBtnText }}</button>
+                        <button @click="clearChat" class="danger-btn">مسح</button>
+                        <div id="status" class="status"></div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script src="script.protected.js"></script>
+        <script src="script.protected.js"></script>
 </body>
 
 </html>

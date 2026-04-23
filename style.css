@@ -63,7 +63,7 @@ body {
     padding: 10px 15px;
     margin-bottom: 8px;
     border-radius: 8px;
-    background-color: rgba(0, 0, 0, 0.5);
+    /* background-color controlled by JavaScript inline styles */
     /* Default */
     color: white;
     /* Default */
